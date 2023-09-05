@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 
+/// @brief 时间统计
 class TicToc {
  public:
   TicToc() { tic(); }

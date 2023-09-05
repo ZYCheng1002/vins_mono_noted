@@ -18,21 +18,21 @@ queue<sensor_msgs::ImageConstPtr> img_buf;
 ros::Publisher pub_img, pub_match;
 ros::Publisher pub_restart;
 
-FeatureTracker trackerData[NUM_OF_CAM];
-double first_image_time;
-int pub_count = 1;
+FeatureTracker trackerData[NUM_OF_CAM];  /// 每一个相机对应一个tracker
+double first_image_time;                 /// 首帧时间
+int pub_count = 1;                       /// 统计pub个数,用以控制频率
 bool first_image_flag = true;
 double last_image_time = 0;
 bool init_pub = 0;
 
 void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
-  if (first_image_flag) {
+  if (first_image_flag) {  /// 首帧初始化时间
     first_image_flag = false;
     first_image_time = img_msg->header.stamp.toSec();
     last_image_time = img_msg->header.stamp.toSec();
     return;
   }
-  // detect unstable camera stream
+  /// 当前时间和上一帧差1s,当前时间小于上一帧,需要重置.
   if (img_msg->header.stamp.toSec() - last_image_time > 1.0 ||
       img_msg->header.stamp.toSec() < last_image_time) {
     ROS_WARN("image discontinue! reset the feature tracker!");
@@ -45,11 +45,12 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
     return;
   }
   last_image_time = img_msg->header.stamp.toSec();
-  // frequency control
+  /// 频率控制
+  /// 计算发布的总数/总时间=平均时间和FREQ进行对比
   if (round(1.0 * pub_count /
             (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ) {
     PUB_THIS_FRAME = true;
-    // reset the frequency control
+    /// 频率太低重置count
     if (abs(1.0 * pub_count /
                 (img_msg->header.stamp.toSec() - first_image_time) -
             FREQ) < 0.01 * FREQ) {
@@ -77,11 +78,11 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
   TicToc t_r;
   for (int i = 0; i < NUM_OF_CAM; i++) {
     ROS_DEBUG("processing camera %d", i);
-    if (i != 1 || !STEREO_TRACK)
+    if (i != 1 || !STEREO_TRACK)  /// 单目相机进入该逻辑
       trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)),
                                img_msg->header.stamp.toSec());
     else {
-      if (EQUALIZE) {
+      if (EQUALIZE) {  /// 自适应均衡化
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
         clahe->apply(ptr->image.rowRange(ROW * i, ROW * (i + 1)),
                      trackerData[i].cur_img);
@@ -204,7 +205,8 @@ int main(int argc, char** argv) {
   readParameters(n);
 
   for (int i = 0; i < NUM_OF_CAM; i++)
-    trackerData[i].readIntrinsicParameter(CAM_NAMES[i]);
+    trackerData[i].readIntrinsicParameter(
+        CAM_NAMES[i]);  /// CAM_NAMES[i]为config路径
 
   if (FISHEYE) {
     for (int i = 0; i < NUM_OF_CAM; i++) {

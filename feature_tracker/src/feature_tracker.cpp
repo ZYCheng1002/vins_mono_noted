@@ -26,6 +26,7 @@ void reduceVector(vector<int>& v, vector<uchar> status) {
 
 FeatureTracker::FeatureTracker() {}
 
+/// @brief 通过mask设置特征点范围
 void FeatureTracker::setMask() {
   if (FISHEYE)
     mask = fisheye_mask.clone();
@@ -73,7 +74,7 @@ void FeatureTracker::readImage(const cv::Mat& _img, double _cur_time) {
   TicToc t_r;
   cur_time = _cur_time;
 
-  if (EQUALIZE) {
+  if (EQUALIZE) {  /// 自适应均衡化
     cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
     TicToc t_c;
     clahe->apply(_img, img);
@@ -118,11 +119,12 @@ void FeatureTracker::readImage(const cv::Mat& _img, double _cur_time) {
 
     ROS_DEBUG("detect feature begins");
     TicToc t_t;
-    int n_max_cnt = MAX_CNT - static_cast<int>(forw_pts.size());
+    int n_max_cnt = MAX_CNT - static_cast<int>(forw_pts.size());  /// 需要提取特征的数目
     if (n_max_cnt > 0) {
       if (mask.empty()) cout << "mask is empty " << endl;
       if (mask.type() != CV_8UC1) cout << "mask type wrong " << endl;
       if (mask.size() != forw_img.size()) cout << "wrong size " << endl;
+      /// 提取角点,保存到n_pts
       cv::goodFeaturesToTrack(
           forw_img, n_pts, MAX_CNT - forw_pts.size(), 0.01, MIN_DIST, mask);
     } else
@@ -229,10 +231,11 @@ void FeatureTracker::showUndistortion(const string& name) {
   cv::waitKey(0);
 }
 
+/// 点去畸变
 void FeatureTracker::undistortedPoints() {
   cur_un_pts.clear();
   cur_un_pts_map.clear();
-  // cv::undistortPoints(cur_pts, un_pts, K, cv::Mat());
+  // cv::undistortPoints(cur_pts, un_pts, K, cv::Mat());  opencv接口
   for (unsigned int i = 0; i < cur_pts.size(); i++) {
     Eigen::Vector2d a(cur_pts[i].x, cur_pts[i].y);
     Eigen::Vector3d b;

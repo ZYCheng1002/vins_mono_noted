@@ -30,6 +30,7 @@ T readParam(ros::NodeHandle& n, std::string name) {
   return ans;
 }
 
+/// @brief  读取节点参数
 void readParameters(ros::NodeHandle& n) {
   std::string config_file;
   config_file = readParam<std::string>(n, "config_file");
@@ -50,8 +51,9 @@ void readParameters(ros::NodeHandle& n) {
   SHOW_TRACK = fsSettings["show_track"];
   EQUALIZE = fsSettings["equalize"];
   FISHEYE = fsSettings["fisheye"];
+  /// 鱼眼相机需要过滤
   if (FISHEYE == 1) FISHEYE_MASK = VINS_FOLDER_PATH + "config/fisheye_mask.jpg";
-  CAM_NAMES.push_back(config_file);
+  CAM_NAMES.push_back(config_file);  /// 相机名即config名
 
   WINDOW_SIZE = 20;
   STEREO_TRACK = false;
