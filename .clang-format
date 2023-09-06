@@ -5,3 +5,4 @@ BinPackParameters: false
 PointerAlignment: Left
 DerivePointerAlignment: false
 CommentPragmas: NOLINT.*
+ColumnLimit: 120

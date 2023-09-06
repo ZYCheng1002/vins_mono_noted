@@ -33,8 +33,7 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
     return;
   }
   /// 当前时间和上一帧差1s,当前时间小于上一帧,需要重置.
-  if (img_msg->header.stamp.toSec() - last_image_time > 1.0 ||
-      img_msg->header.stamp.toSec() < last_image_time) {
+  if (img_msg->header.stamp.toSec() - last_image_time > 1.0 || img_msg->header.stamp.toSec() < last_image_time) {
     ROS_WARN("image discontinue! reset the feature tracker!");
     first_image_flag = true;
     last_image_time = 0;
@@ -47,18 +46,16 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
   last_image_time = img_msg->header.stamp.toSec();
   /// 频率控制
   /// 计算发布的总数/总时间=平均时间和FREQ进行对比
-  if (round(1.0 * pub_count /
-            (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ) {
+  if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ) {
     PUB_THIS_FRAME = true;
     /// 频率太低重置count
-    if (abs(1.0 * pub_count /
-                (img_msg->header.stamp.toSec() - first_image_time) -
-            FREQ) < 0.01 * FREQ) {
+    if (abs(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time) - FREQ) < 0.01 * FREQ) {
       first_image_time = img_msg->header.stamp.toSec();
       pub_count = 0;
     }
-  } else
+  } else {
     PUB_THIS_FRAME = false;
+  }
 
   cv_bridge::CvImageConstPtr ptr;
   if (img_msg->encoding == "8UC1") {
@@ -79,13 +76,11 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
   for (int i = 0; i < NUM_OF_CAM; i++) {
     ROS_DEBUG("processing camera %d", i);
     if (i != 1 || !STEREO_TRACK)  /// 单目相机进入该逻辑
-      trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)),
-                               img_msg->header.stamp.toSec());
+      trackerData[i].readImage(ptr->image.rowRange(ROW * i, ROW * (i + 1)), img_msg->header.stamp.toSec());
     else {
       if (EQUALIZE) {  /// 自适应均衡化
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
-        clahe->apply(ptr->image.rowRange(ROW * i, ROW * (i + 1)),
-                     trackerData[i].cur_img);
+        clahe->apply(ptr->image.rowRange(ROW * i, ROW * (i + 1)), trackerData[i].cur_img);
       } else
         trackerData[i].cur_img = ptr->image.rowRange(ROW * i, ROW * (i + 1));
     }
@@ -143,9 +138,7 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
     feature_points->channels.push_back(v_of_point);
     feature_points->channels.push_back(velocity_x_of_point);
     feature_points->channels.push_back(velocity_y_of_point);
-    ROS_DEBUG("publish %f, at %f",
-              feature_points->header.stamp.toSec(),
-              ros::Time::now().toSec());
+    ROS_DEBUG("publish %f, at %f", feature_points->header.stamp.toSec(), ros::Time::now().toSec());
     // skip the first image; since no optical speed on frist image
     if (!init_pub) {
       init_pub = 1;
@@ -162,13 +155,8 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
         cv::cvtColor(show_img, tmp_img, CV_GRAY2RGB);
 
         for (unsigned int j = 0; j < trackerData[i].cur_pts.size(); j++) {
-          double len =
-              std::min(1.0, 1.0 * trackerData[i].track_cnt[j] / WINDOW_SIZE);
-          cv::circle(tmp_img,
-                     trackerData[i].cur_pts[j],
-                     2,
-                     cv::Scalar(255 * (1 - len), 0, 255 * len),
-                     2);
+          double len = std::min(1.0, 1.0 * trackerData[i].track_cnt[j] / WINDOW_SIZE);
+          cv::circle(tmp_img, trackerData[i].cur_pts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
           // draw speed line
           /*
           Vector2d tmp_cur_un_pts (trackerData[i].cur_un_pts[j].x,
@@ -200,13 +188,11 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "feature_tracker");
   ros::NodeHandle n("~");
-  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
-                                 ros::console::levels::Info);
+  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
   readParameters(n);
 
   for (int i = 0; i < NUM_OF_CAM; i++)
-    trackerData[i].readIntrinsicParameter(
-        CAM_NAMES[i]);  /// CAM_NAMES[i]为config路径
+    trackerData[i].readIntrinsicParameter(CAM_NAMES[i]);  /// CAM_NAMES[i]为config路径
 
   if (FISHEYE) {
     for (int i = 0; i < NUM_OF_CAM; i++) {
