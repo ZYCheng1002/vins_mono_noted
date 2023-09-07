@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
   bool verbose;
 
   //========= Handling Program options =========
+  /// 定义option,TODO:不用这个
   boost::program_options::options_description desc("Allowed options");
   desc.add_options()("help", "produce help message")(
       "width,w",
@@ -137,7 +138,7 @@ int main(int argc, char** argv) {
 
   std::sort(imageFilenames.begin(), imageFilenames.end());
 
-  cv::Mat image = cv::imread(imageFilenames.front(), -1);
+  cv::Mat image = cv::imread(imageFilenames.front(), -1);  // 读取首图,获取size
   const cv::Size frameSize = image.size();
 
   camodocal::CameraCalibration calibration(modelType, cameraName, frameSize, boardSize, squareSize);
