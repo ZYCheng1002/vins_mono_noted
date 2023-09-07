@@ -15,7 +15,7 @@ boost::shared_ptr<CameraFactory> CameraFactory::m_instance;
 CameraFactory::CameraFactory() {}
 
 boost::shared_ptr<CameraFactory> CameraFactory::instance(void) {
-  if (m_instance.get() == 0) {
+  if (m_instance.get() == nullptr) {
     m_instance.reset(new CameraFactory);
   }
 

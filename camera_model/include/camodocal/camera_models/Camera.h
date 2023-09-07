@@ -8,10 +8,11 @@
 
 namespace camodocal {
 
+///@brief 基类,所有的相机模型均继承
 class Camera {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  enum ModelType { KANNALA_BRANDT, MEI, PINHOLE, SCARAMUZZA };
+  enum ModelType { KANNALA_BRANDT, MEI, PINHOLE, SCARAMUZZA };  /// 相机类型
 
   class Parameters {
    public:
@@ -51,15 +52,17 @@ class Camera {
   virtual cv::Mat& mask(void);
   virtual const cv::Mat& mask(void) const;
 
+  /// @brief 内参估计
   virtual void estimateIntrinsics(const cv::Size& boardSize,
                                   const std::vector<std::vector<cv::Point3f>>& objectPoints,
                                   const std::vector<std::vector<cv::Point2f>>& imagePoints) = 0;
+  /// @brief 外参估计
   virtual void estimateExtrinsics(const std::vector<cv::Point3f>& objectPoints,
                                   const std::vector<cv::Point2f>& imagePoints,
                                   cv::Mat& rvec,
                                   cv::Mat& tvec) const;
 
-  // Lift points from the image plane to the sphere
+  /// @brief 鱼眼相机,像素点投影到球上 || Lift points from the image plane to the sphere
   virtual void liftSphere(const Eigen::Vector2d& p, Eigen::Vector3d& P) const = 0;
   //%output P
 

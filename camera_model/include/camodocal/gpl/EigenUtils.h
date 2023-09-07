@@ -9,6 +9,7 @@
 namespace camodocal {
 
 // Returns the 3D cross product skew symmetric matrix of a given 3D vector
+/// 反对称矩阵
 template <typename T>
 Eigen::Matrix<T, 3, 3> skew(const Eigen::Matrix<T, 3, 1>& vec) {
   return (Eigen::Matrix<T, 3, 3>() << T(0), -vec(2), vec(1), vec(2), T(0), -vec(0), -vec(1), vec(0), T(0)).finished();
@@ -21,6 +22,7 @@ typename Eigen::MatrixBase<Derived>::PlainObject sqrtm(const Eigen::MatrixBase<D
   return es.operatorSqrt();
 }
 
+/// 旋转向量-->旋转矩阵
 template <typename T>
 Eigen::Matrix<T, 3, 3> AngleAxisToRotationMatrix(const Eigen::Matrix<T, 3, 1>& rvec) {
   T angle = rvec.norm();
@@ -37,6 +39,7 @@ Eigen::Matrix<T, 3, 3> AngleAxisToRotationMatrix(const Eigen::Matrix<T, 3, 1>& r
   return rmat;
 }
 
+/// 旋转向量-->四元数
 template <typename T>
 Eigen::Quaternion<T> AngleAxisToQuaternion(const Eigen::Matrix<T, 3, 1>& rvec) {
   Eigen::Matrix<T, 3, 3> rmat = AngleAxisToRotationMatrix<T>(rvec);
@@ -44,6 +47,7 @@ Eigen::Quaternion<T> AngleAxisToQuaternion(const Eigen::Matrix<T, 3, 1>& rvec) {
   return Eigen::Quaternion<T>(rmat);
 }
 
+/// 旋转向量-->四元数
 template <typename T>
 void AngleAxisToQuaternion(const Eigen::Matrix<T, 3, 1>& rvec, T* q) {
   Eigen::Quaternion<T> quat = AngleAxisToQuaternion<T>(rvec);
@@ -54,6 +58,7 @@ void AngleAxisToQuaternion(const Eigen::Matrix<T, 3, 1>& rvec, T* q) {
   q[3] = quat.w();
 }
 
+/// 旋转矩阵-->旋转向量
 template <typename T>
 Eigen::Matrix<T, 3, 1> RotationToAngleAxis(const Eigen::Matrix<T, 3, 3>& rmat) {
   Eigen::AngleAxis<T> angleaxis;
@@ -61,6 +66,7 @@ Eigen::Matrix<T, 3, 1> RotationToAngleAxis(const Eigen::Matrix<T, 3, 3>& rmat) {
   return angleaxis.angle() * angleaxis.axis();
 }
 
+/// 四元数-->旋转向量
 template <typename T>
 void QuaternionToAngleAxis(const T* const q, Eigen::Matrix<T, 3, 1>& rvec) {
   Eigen::Quaternion<T> quat(q[3], q[0], q[1], q[2]);
@@ -73,6 +79,7 @@ void QuaternionToAngleAxis(const T* const q, Eigen::Matrix<T, 3, 1>& rvec) {
   rvec = angleaxis.angle() * angleaxis.axis();
 }
 
+/// 四元数-->旋转矩阵
 template <typename T>
 Eigen::Matrix<T, 3, 3> QuaternionToRotation(const T* const q) {
   T R[9];
@@ -88,11 +95,13 @@ Eigen::Matrix<T, 3, 3> QuaternionToRotation(const T* const q) {
   return rmat;
 }
 
+/// 四元数-->旋转矩阵
 template <typename T>
 void QuaternionToRotation(const T* const q, T* rot) {
   ceres::QuaternionToRotation(q, rot);
 }
 
+/// 四元数左乘形式 q_L
 template <typename T>
 Eigen::Matrix<T, 4, 4> QuaternionMultMatLeft(const Eigen::Quaternion<T>& q) {
   return (Eigen::Matrix<T, 4, 4>() << q.w(),
@@ -114,6 +123,7 @@ Eigen::Matrix<T, 4, 4> QuaternionMultMatLeft(const Eigen::Quaternion<T>& q) {
       .finished();
 }
 
+/// 四元数右乘形式 q_R
 template <typename T>
 Eigen::Matrix<T, 4, 4> QuaternionMultMatRight(const Eigen::Quaternion<T>& q) {
   return (Eigen::Matrix<T, 4, 4>() << q.w(),
