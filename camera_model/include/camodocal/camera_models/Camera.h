@@ -66,20 +66,13 @@ class Camera {
   virtual void liftSphere(const Eigen::Vector2d& p, Eigen::Vector3d& P) const = 0;
   //%output P
 
-  // Lift points from the image plane to the projective space
+  ///@brief 像素平面到投影平面 || Lift points from the image plane to the projective space
   virtual void liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) const = 0;
   //%output P
 
-  // Projects 3D points to the image plane (Pi function)
+  ///@brief 空间三维点到像素平面 || Projects 3D points to the image plane (Pi function)
   virtual void spaceToPlane(const Eigen::Vector3d& P, Eigen::Vector2d& p) const = 0;
   //%output p
-
-  // Projects 3D points to the image plane (Pi function)
-  // and calculates jacobian
-  // virtual void spaceToPlane(const Eigen::Vector3d& P, Eigen::Vector2d& p,
-  //                          Eigen::Matrix<double,2,3>& J) const = 0;
-  //%output p
-  //%output J
 
   virtual void undistToPlane(const Eigen::Vector2d& p_u, Eigen::Vector2d& p) const = 0;
   //%output p
@@ -103,26 +96,23 @@ class Camera {
 
   virtual std::string parametersToString(void) const = 0;
 
-  /**
-   * \brief Calculates the reprojection distance between points
-   *
-   * \param P1 first 3D point coordinates
-   * \param P2 second 3D point coordinates
-   * \return euclidean distance in the plane
-   */
+   ///@brief 计算两点在像素上的欧式距离
   double reprojectionDist(const Eigen::Vector3d& P1, const Eigen::Vector3d& P2) const;
 
+  ///@brief 重投影误差
   double reprojectionError(const std::vector<std::vector<cv::Point3f>>& objectPoints,
                            const std::vector<std::vector<cv::Point2f>>& imagePoints,
                            const std::vector<cv::Mat>& rvecs,
                            const std::vector<cv::Mat>& tvecs,
                            cv::OutputArray perViewErrors = cv::noArray()) const;
 
+  ///@brief 重投影误差
   double reprojectionError(const Eigen::Vector3d& P,
                            const Eigen::Quaterniond& camera_q,
                            const Eigen::Vector3d& camera_t,
                            const Eigen::Vector2d& observed_p) const;
 
+  ///@brief 投影
   void projectPoints(const std::vector<cv::Point3f>& objectPoints,
                      const cv::Mat& rvec,
                      const cv::Mat& tvec,

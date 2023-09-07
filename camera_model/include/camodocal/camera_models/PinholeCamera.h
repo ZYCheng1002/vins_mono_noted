@@ -64,9 +64,7 @@ class PinholeCamera : public Camera {
 
   PinholeCamera();
 
-  /**
-   * \brief Constructor from the projection model parameters
-   */
+  ///@brief Constructor from the projection model parameters
   PinholeCamera(const std::string& cameraName,
                 int imageWidth,
                 int imageHeight,
@@ -78,9 +76,8 @@ class PinholeCamera : public Camera {
                 double fy,
                 double cx,
                 double cy);
-  /**
-   * \brief Constructor from the projection model parameters
-   */
+
+  ///@brief Constructor from the projection model parameters
   PinholeCamera(const Parameters& params);
 
   Camera::ModelType modelType(void) const;

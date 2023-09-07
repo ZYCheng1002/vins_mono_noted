@@ -314,30 +314,16 @@ void PinholeCamera::estimateIntrinsics(const cv::Size& boardSize,
   setParameters(params);
 }
 
-/**
- * \brief Lifts a point from the image plane to the unit sphere
- *
- * \param p image coordinates
- * \param P coordinates of the point on the sphere
- */
+///@brief 通过normalize操作,获取球上的三维坐标
 void PinholeCamera::liftSphere(const Eigen::Vector2d& p, Eigen::Vector3d& P) const {
   liftProjective(p, P);
-
   P.normalize();
 }
 
-/**
- * \brief Lifts a point from the image plane to its projective ray
- *
- * \param p image coordinates
- * \param P coordinates of the projective ray
- */
+///@brief 二维像素点反投影到归一化平面
 void PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) const {
-  double mx_d, my_d, mx2_d, mxy_d, my2_d, mx_u, my_u;
-  double rho2_d, rho4_d, radDist_d, Dx_d, Dy_d, inv_denom_d;
-  // double lambda;
-
-  // Lift points to normalised plane
+  double mx_d, my_d, mx_u, my_u;
+  /// 像素投影到相机平面 m = K^-1 * p
   mx_d = m_inv_K11 * p(0) + m_inv_K13;
   my_d = m_inv_K22 * p(1) + m_inv_K23;
 
@@ -345,69 +331,42 @@ void PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P)
     mx_u = mx_d;
     my_u = my_d;
   } else {
-    if (0) {
-      double k1 = mParameters.k1();
-      double k2 = mParameters.k2();
-      double p1 = mParameters.p1();
-      double p2 = mParameters.p2();
+    int n = 8;
+    Eigen::Vector2d d_u;
+    /// 计算m点此时的畸变纠正后的点,获取差值.所以d_u实际上是delta值
+    distortion(Eigen::Vector2d(mx_d, my_d), d_u);
+    /// 运用delta值,相当于去畸变
+    mx_u = mx_d - d_u(0);
+    my_u = my_d - d_u(1);
 
-      // Apply inverse distortion model
-      // proposed by Heikkila
-      mx2_d = mx_d * mx_d;
-      my2_d = my_d * my_d;
-      mxy_d = mx_d * my_d;
-      rho2_d = mx2_d + my2_d;
-      rho4_d = rho2_d * rho2_d;
-      radDist_d = k1 * rho2_d + k2 * rho4_d;
-      Dx_d = mx_d * radDist_d + p2 * (rho2_d + 2 * mx2_d) + 2 * p1 * mxy_d;
-      Dy_d = my_d * radDist_d + p1 * (rho2_d + 2 * my2_d) + 2 * p2 * mxy_d;
-      inv_denom_d = 1 / (1 + 4 * k1 * rho2_d + 6 * k2 * rho4_d + 8 * p1 * my_d + 8 * p2 * mx_d);
-
-      mx_u = mx_d - inv_denom_d * Dx_d;
-      my_u = my_d - inv_denom_d * Dy_d;
-    } else {
-      // Recursive distortion model
-      int n = 8;
-      Eigen::Vector2d d_u;
-      distortion(Eigen::Vector2d(mx_d, my_d), d_u);
-      // Approximate value
+    /// 重复进行,和去畸变逆运算的效果近似
+    for (int i = 1; i < n; ++i) {
+      distortion(Eigen::Vector2d(mx_u, my_u), d_u);
       mx_u = mx_d - d_u(0);
       my_u = my_d - d_u(1);
-
-      for (int i = 1; i < n; ++i) {
-        distortion(Eigen::Vector2d(mx_u, my_u), d_u);
-        mx_u = mx_d - d_u(0);
-        my_u = my_d - d_u(1);
-      }
     }
   }
 
-  // Obtain a projective ray
-  P << mx_u, my_u, 1.0;
+  P << mx_u, my_u, 1.0;  /// 获取归一化坐标
 }
 
-/**
- * \brief Project a 3D point (\a x,\a y,\a z) to the image plane in (\a u,\a v)
- *
- * \param P 3D point coordinates
- * \param p return value, contains the image point coordinates
- */
+///@brief 三维点投影到像素平面
 void PinholeCamera::spaceToPlane(const Eigen::Vector3d& P, Eigen::Vector2d& p) const {
   Eigen::Vector2d p_u, p_d;
 
-  // Project points to the normalised plane
+  /// 计算归一化
   p_u << P(0) / P(2), P(1) / P(2);
 
   if (m_noDistortion) {
     p_d = p_u;
   } else {
-    // Apply distortion
+    /// 计算畸变后的坐标
     Eigen::Vector2d d_u;
     distortion(p_u, d_u);
     p_d = p_u + d_u;
   }
 
-  // Apply generalised projection matrix
+  /// p = K * pd
   p << mParameters.fx() * p_d(0) + mParameters.cx(), mParameters.fy() * p_d(1) + mParameters.cy();
 }
 
@@ -500,36 +459,26 @@ void PinholeCamera::undistToPlane(const Eigen::Vector2d& p_u, Eigen::Vector2d& p
   p << mParameters.fx() * p_d(0) + mParameters.cx(), mParameters.fy() * p_d(1) + mParameters.cy();
 }
 
-/**
- * \brief Apply distortion to input point (from the normalised plane)
- *
- * \param p_u undistorted coordinates of point on the normalised plane
- * \return to obtain the distorted point: p_d = p_u + d_u
- */
+///@brief 计算畸变
 void PinholeCamera::distortion(const Eigen::Vector2d& p_u, Eigen::Vector2d& d_u) const {
   double k1 = mParameters.k1();
   double k2 = mParameters.k2();
   double p1 = mParameters.p1();
   double p2 = mParameters.p2();
-
   double mx2_u, my2_u, mxy_u, rho2_u, rad_dist_u;
 
+  /// x` = x(1 + k_1 * r^2 + k_2 * r^4 + k_3 * r^6) + 2 * p_1 * xy + p_2 * (r^2 + 2 * x^2)
   mx2_u = p_u(0) * p_u(0);
   my2_u = p_u(1) * p_u(1);
   mxy_u = p_u(0) * p_u(1);
   rho2_u = mx2_u + my2_u;
+  /// 比正常畸变公式少1.原因在于:为了获取差值(畸变前后的差值)
   rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
   d_u << p_u(0) * rad_dist_u + 2.0 * p1 * mxy_u + p2 * (rho2_u + 2.0 * mx2_u),
       p_u(1) * rad_dist_u + 2.0 * p2 * mxy_u + p1 * (rho2_u + 2.0 * my2_u);
 }
 
-/**
- * \brief Apply distortion to input point (from the normalised plane)
- *        and calculate Jacobian
- *
- * \param p_u undistorted coordinates of point on the normalised plane
- * \return to obtain the distorted point: p_d = p_u + d_u
- */
+///@brief 计算畸变和雅克比
 void PinholeCamera::distortion(const Eigen::Vector2d& p_u, Eigen::Vector2d& d_u, Eigen::Matrix2d& J) const {
   double k1 = mParameters.k1();
   double k2 = mParameters.k2();
@@ -546,6 +495,7 @@ void PinholeCamera::distortion(const Eigen::Vector2d& p_u, Eigen::Vector2d& d_u,
   d_u << p_u(0) * rad_dist_u + 2.0 * p1 * mxy_u + p2 * (rho2_u + 2.0 * mx2_u),
       p_u(1) * rad_dist_u + 2.0 * p2 * mxy_u + p1 * (rho2_u + 2.0 * my2_u);
 
+  /// x_distorted 和 x_distorted包含x y,所以分别对x y进行求导
   double dxdmx =
       1.0 + rad_dist_u + k1 * 2.0 * mx2_u + k2 * rho2_u * 4.0 * mx2_u + 2.0 * p1 * p_u(1) + 6.0 * p2 * p_u(0);
   double dydmx =
@@ -557,6 +507,7 @@ void PinholeCamera::distortion(const Eigen::Vector2d& p_u, Eigen::Vector2d& d_u,
   J << dxdmx, dxdmy, dydmx, dydmy;
 }
 
+///@brief 映射map,起到加速的作用
 void PinholeCamera::initUndistortMap(cv::Mat& map1, cv::Mat& map2, double fScale) const {
   cv::Size imageSize(mParameters.imageWidth(), mParameters.imageHeight());
 
@@ -582,6 +533,7 @@ void PinholeCamera::initUndistortMap(cv::Mat& map1, cv::Mat& map2, double fScale
   cv::convertMaps(mapX, mapY, map1, map2, CV_32FC1, false);
 }
 
+///@brief 增加外参的去畸变映射
 cv::Mat PinholeCamera::initUndistortRectifyMap(
     cv::Mat& map1, cv::Mat& map2, float fx, float fy, cv::Size imageSize, float cx, float cy, cv::Mat rmat) const {
   if (imageSize == cv::Size(0, 0)) {
@@ -646,13 +598,14 @@ void PinholeCamera::setParameters(const PinholeCamera::Parameters& parameters) {
   } else {
     m_noDistortion = false;
   }
-
+  /// 计算 K^-1
   m_inv_K11 = 1.0 / mParameters.fx();
   m_inv_K13 = -mParameters.cx() / mParameters.fx();
   m_inv_K22 = 1.0 / mParameters.fy();
   m_inv_K23 = -mParameters.cy() / mParameters.fy();
 }
 
+///@brief 读取畸变参数和内参
 void PinholeCamera::readParameters(const std::vector<double>& parameterVec) {
   if ((int)parameterVec.size() != parameterCount()) {
     return;
