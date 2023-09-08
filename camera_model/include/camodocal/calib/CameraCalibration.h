@@ -20,6 +20,7 @@ class CameraCalibration {
 
   void clear(void);
 
+  ///@brief 增加棋盘格数据
   void addChessboardData(const std::vector<cv::Point2f>& corners);
 
   bool calibrate(void);
@@ -58,8 +59,8 @@ class CameraCalibration {
   template <typename T>
   void writeData(std::ofstream& ofs, T data) const;
 
-  cv::Size m_boardSize;
-  float m_squareSize;
+  cv::Size m_boardSize;  /// 棋格的行列总数
+  float m_squareSize;    /// 一个旗格的大小(mm)
 
   CameraPtr m_camera;
   cv::Mat m_cameraPoses;

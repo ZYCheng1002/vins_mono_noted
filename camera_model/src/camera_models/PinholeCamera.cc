@@ -253,6 +253,7 @@ void PinholeCamera::estimateIntrinsics(const cv::Size& boardSize,
   cv::Mat A(nImages * 2, 2, CV_64F);
   cv::Mat b(nImages * 2, 1, CV_64F);
 
+  /// 循环遍历每一张图的角点
   for (size_t i = 0; i < nImages; ++i) {
     const std::vector<cv::Point3f>& oPoints = objectPoints.at(i);
 
@@ -261,8 +262,9 @@ void PinholeCamera::estimateIntrinsics(const cv::Size& boardSize,
       M.at(j) = cv::Point2f(oPoints.at(j).x, oPoints.at(j).y);
     }
 
-    cv::Mat H = cv::findHomography(M, imagePoints.at(i));
+    cv::Mat H = cv::findHomography(M, imagePoints.at(i));  /// 计算像素和真实点的单映矩阵
 
+    /// 单应性矩阵 H 进行修正
     H.at<double>(0, 0) -= H.at<double>(2, 0) * cx;
     H.at<double>(0, 1) -= H.at<double>(2, 1) * cx;
     H.at<double>(0, 2) -= H.at<double>(2, 2) * cx;

@@ -29,11 +29,12 @@ void Chessboard::findCorners(bool useOpenCV) {
       useOpenCV);
 
   if (mCornersFound) {
-    // draw chessboard corners
+    /// 绘制棋盘格
     cv::drawChessboardCorners(mSketch, mBoardSize, mCorners, mCornersFound);
   }
 }
 
+///@brief 返回棋盘格
 const std::vector<cv::Point2f>& Chessboard::getCorners(void) const { return mCorners; }
 
 bool Chessboard::cornersFound(void) const { return mCornersFound; }
@@ -45,6 +46,7 @@ const cv::Mat& Chessboard::getSketch(void) const { return mSketch; }
 bool Chessboard::findChessboardCorners(
     const cv::Mat& image, const cv::Size& patternSize, std::vector<cv::Point2f>& corners, int flags, bool useOpenCV) {
   if (useOpenCV) {
+    /// 基于opencv库
     return cv::findChessboardCorners(image, patternSize, corners, flags);
   } else {
     return findChessboardCornersImproved(image, patternSize, corners, flags);

@@ -7,20 +7,25 @@
 namespace camodocal {
 
 // forward declarations
-class ChessboardCorner;
+class ChessboardCorner;  /// 棋盘角点识别
 typedef boost::shared_ptr<ChessboardCorner> ChessboardCornerPtr;
-class ChessboardQuad;
+class ChessboardQuad;  /// 棋盘四边形识别
 typedef boost::shared_ptr<ChessboardQuad> ChessboardQuadPtr;
 
 class Chessboard {
  public:
   Chessboard(cv::Size boardSize, cv::Mat& image);
 
+  ///@brief 角点识别
   void findCorners(bool useOpenCV = false);
+
+  ///@brief 获取角点
   const std::vector<cv::Point2f>& getCorners(void) const;
+
   bool cornersFound(void) const;
 
   const cv::Mat& getImage(void) const;
+
   const cv::Mat& getSketch(void) const;
 
  private:
@@ -34,6 +39,7 @@ class Chessboard {
 
   void cleanFoundConnectedQuads(std::vector<ChessboardQuadPtr>& quadGroup, cv::Size patternSize);
 
+  ///@brief 获取棋盘四边形
   void findConnectedQuads(std::vector<ChessboardQuadPtr>& quads,
                           std::vector<ChessboardQuadPtr>& group,
                           int group_idx,

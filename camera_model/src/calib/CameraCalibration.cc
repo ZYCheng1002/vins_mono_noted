@@ -30,7 +30,7 @@ CameraCalibration::CameraCalibration(const Camera::ModelType modelType,
   m_camera = CameraFactory::instance()->generateCamera(modelType, cameraName, imageSize);
 }
 
-void CameraCalibration::clear(void) {
+void CameraCalibration::clear() {
   m_imagePoints.clear();
   m_scenePoints.clear();
 }
@@ -38,6 +38,7 @@ void CameraCalibration::clear(void) {
 void CameraCalibration::addChessboardData(const std::vector<cv::Point2f>& corners) {
   m_imagePoints.push_back(corners);
 
+  /// 获取实际旗格的角点位置
   std::vector<cv::Point3f> scenePointsInView;
   for (int i = 0; i < m_boardSize.height; ++i) {
     for (int j = 0; j < m_boardSize.width; ++j) {
@@ -108,6 +109,7 @@ bool CameraCalibration::calibrate(void) {
 
   return ret;
 }
+
 
 int CameraCalibration::sampleCount(void) const { return m_imagePoints.size(); }
 
@@ -336,10 +338,10 @@ bool CameraCalibration::calibrateHelper(CameraPtr& camera,
   rvecs.assign(m_scenePoints.size(), cv::Mat());
   tvecs.assign(m_scenePoints.size(), cv::Mat());
 
-  // STEP 1: Estimate intrinsics
+  /// 步骤1: 内参估计
   camera->estimateIntrinsics(m_boardSize, m_scenePoints, m_imagePoints);
 
-  // STEP 2: Estimate extrinsics
+  /// 步骤2: 外参估计
   for (size_t i = 0; i < m_scenePoints.size(); ++i) {
     camera->estimateExtrinsics(m_scenePoints.at(i), m_imagePoints.at(i), rvecs.at(i), tvecs.at(i));
   }
