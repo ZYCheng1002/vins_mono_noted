@@ -33,11 +33,12 @@ void FeatureTracker::setMask() {
     mask = cv::Mat(ROW, COL, CV_8UC1, cv::Scalar(255));
 
   // prefer to keep features that are tracked for long time
-  vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;
+  vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;  /// [追踪次数,[点, ids]]
 
   for (unsigned int i = 0; i < forw_pts.size(); i++)
     cnt_pts_id.push_back(make_pair(track_cnt[i], make_pair(forw_pts[i], ids[i])));
 
+  /// 按照追踪次数进行排序
   sort(cnt_pts_id.begin(),
        cnt_pts_id.end(),
        [](const pair<int, pair<cv::Point2f, int>>& a, const pair<int, pair<cv::Point2f, int>>& b) {
@@ -87,7 +88,7 @@ void FeatureTracker::readImage(const cv::Mat& _img, double _cur_time) {
 
   forw_pts.clear();
 
-  if (cur_pts.size() > 0) {
+  if (cur_pts.size() > 0) {  // 次帧大于0
     TicToc t_o;
     vector<uchar> status;
     vector<float> err;
@@ -106,7 +107,7 @@ void FeatureTracker::readImage(const cv::Mat& _img, double _cur_time) {
     ROS_DEBUG("temporal optical flow costs: %fms", t_o.toc());
   }
 
-  for (auto& n : track_cnt) n++;
+  for (auto& n : track_cnt) n++;  /// 通过status筛选后,追踪次数+1
 
   if (PUB_THIS_FRAME) {
     rejectWithF();  /// 外点剔除
@@ -164,7 +165,7 @@ void FeatureTracker::rejectWithF() {
 
 bool FeatureTracker::updateID(unsigned int i) {
   if (i < ids.size()) {
-    if (ids[i] == -1) ids[i] = n_id++;
+    if (ids[i] == -1) ids[i] = n_id++;  /// 通过static变量n_id赋值ids
     return true;
   } else
     return false;

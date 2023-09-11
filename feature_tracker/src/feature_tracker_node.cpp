@@ -88,11 +88,11 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
   for (unsigned int i = 0;; i++) {
     bool completed = false;
     for (int j = 0; j < NUM_OF_CAM; j++)
-      if (j != 1 || !STEREO_TRACK) completed |= trackerData[j].updateID(i);  /// 更新关键点id
+      if (j != 1 || !STEREO_TRACK) completed |= trackerData[j].updateID(i);  /// 更新关键点id(首帧不进行)
     if (!completed) break;
   }
 
-  if (PUB_THIS_FRAME) {
+  if (PUB_THIS_FRAME) {  // 首帧不发布
     pub_count++;
     sensor_msgs::PointCloudPtr feature_points(new sensor_msgs::PointCloud);
     sensor_msgs::ChannelFloat32 id_of_point;
@@ -103,7 +103,7 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
 
     feature_points->header = img_msg->header;
     feature_points->header.frame_id = "world";
-
+    /// 以下进行id,velocity,u,v整理和发布
     vector<set<int>> hash_ids(NUM_OF_CAM);
     for (int i = 0; i < NUM_OF_CAM; i++) {
       auto& un_pts = trackerData[i].cur_un_pts;
