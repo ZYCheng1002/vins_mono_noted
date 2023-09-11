@@ -2,10 +2,9 @@
 
 int FeatureTracker::n_id = 0;
 
-/// 边界判断
 bool inBorder(const cv::Point2f& pt) {
   const int BORDER_SIZE = 1;
-  int img_x = cvRound(pt.x);
+  int img_x = cvRound(pt.x);  /// cvRound四舍五入,和std::round()一致
   int img_y = cvRound(pt.y);
   return BORDER_SIZE <= img_x && img_x < COL - BORDER_SIZE && BORDER_SIZE <= img_y && img_y < ROW - BORDER_SIZE;
 }
@@ -95,8 +94,9 @@ void FeatureTracker::readImage(const cv::Mat& _img, double _cur_time) {
     /// LK光流,跟踪结果在forw_pts,status为1时,表示可用
     cv::calcOpticalFlowPyrLK(cur_img, forw_img, cur_pts, forw_pts, status, err, cv::Size(21, 21), 3);
 
-    for (int i = 0; i < int(forw_pts.size()); i++)
-      if (status[i] && !inBorder(forw_pts[i])) status[i] = 0;
+    for (int i = 0; i < int(forw_pts.size()); i++) {
+      if (status[i] && !inBorder(forw_pts[i])) status[i] = 0;  /// 筛除异常点
+    }
     reduceVector(prev_pts, status);
     reduceVector(cur_pts, status);
     reduceVector(forw_pts, status);
@@ -122,18 +122,17 @@ void FeatureTracker::readImage(const cv::Mat& _img, double _cur_time) {
       n_pts.clear();
     }
 
-    addPoints();  /// 从n_pts转移到forw_pts
+    addPoints();  /// 通过n_pts初始化forw_pts,ids,track_cnt
   }
   prev_img = cur_img;
   prev_pts = cur_pts;
   prev_un_pts = cur_un_pts;
   cur_img = forw_img;
   cur_pts = forw_pts;
-  undistortedPoints();
+  undistortedPoints();  /// 去畸变和计算速度等(此时cur和prev为正常意义的当前帧和上一帧)
   prev_time = cur_time;
 }
 
-///@brief 通过F阵(基础矩阵)剔外点
 void FeatureTracker::rejectWithF() {
   if (forw_pts.size() >= 8) {
     vector<cv::Point2f> un_cur_pts(cur_pts.size()), un_forw_pts(forw_pts.size());
@@ -208,7 +207,6 @@ void FeatureTracker::showUndistortion(const string& name) {
   cv::waitKey(0);
 }
 
-///@brief 点去畸变
 void FeatureTracker::undistortedPoints() {
   cur_un_pts.clear();
   cur_un_pts_map.clear();

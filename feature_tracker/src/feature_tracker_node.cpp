@@ -9,8 +9,6 @@
 
 #include "feature_tracker.h"
 
-#define SHOW_UNDISTORTION 0
-
 vector<uchar> r_status;
 vector<float> r_err;
 queue<sensor_msgs::ImageConstPtr> img_buf;
@@ -45,10 +43,10 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
   }
   last_image_time = img_msg->header.stamp.toSec();
   /// 频率控制
-  /// 计算发布的总数/总时间=平均时间和FREQ进行对比
+  // 计算发布的总数/总时间=平均时间和FREQ进行对比
   if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ) {
     PUB_THIS_FRAME = true;
-    /// 频率太低重置count
+    // 频率太低重置count
     if (abs(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time) - FREQ) < 0.01 * FREQ) {
       first_image_time = img_msg->header.stamp.toSec();
       pub_count = 0;
@@ -68,8 +66,9 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
     img.data = img_msg->data;
     img.encoding = "mono8";
     ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
-  } else
+  } else {
     ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
+  }
 
   cv::Mat show_img = ptr->image;
   TicToc t_r;
@@ -84,16 +83,12 @@ void img_callback(const sensor_msgs::ImageConstPtr& img_msg) {
       } else
         trackerData[i].cur_img = ptr->image.rowRange(ROW * i, ROW * (i + 1));
     }
-
-#if SHOW_UNDISTORTION
-    trackerData[i].showUndistortion("undistrotion_" + std::to_string(i));
-#endif
   }
 
   for (unsigned int i = 0;; i++) {
     bool completed = false;
     for (int j = 0; j < NUM_OF_CAM; j++)
-      if (j != 1 || !STEREO_TRACK) completed |= trackerData[j].updateID(i);
+      if (j != 1 || !STEREO_TRACK) completed |= trackerData[j].updateID(i);  /// 更新关键点id
     if (!completed) break;
   }
 
