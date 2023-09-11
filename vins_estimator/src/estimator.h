@@ -28,9 +28,10 @@ class Estimator {
 
   void setParameter();
 
-  // interface
+  ///@brief IMU处理(interface)
   void processIMU(double t, const Vector3d& linear_acceleration, const Vector3d& angular_velocity);
 
+  ///@brief 关键点处理
   void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& image,
                     const std_msgs::Header& header);
 
@@ -46,6 +47,7 @@ class Estimator {
 
   bool relativePose(Matrix3d& relative_R, Vector3d& relative_T, int& l);
 
+  ///@brief 滑窗
   void slideWindow();
 
   void solveOdometry();
@@ -93,7 +95,7 @@ class Estimator {
   vector<Vector3d> linear_acceleration_buf[(WINDOW_SIZE + 1)];
   vector<Vector3d> angular_velocity_buf[(WINDOW_SIZE + 1)];
 
-  int frame_count;
+  int frame_count;  /// 帧数(关键点)
   int sum_of_outlier, sum_of_back, sum_of_front, sum_of_invalid;
 
   FeatureManager f_manager;

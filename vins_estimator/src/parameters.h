@@ -11,7 +11,7 @@
 #include "utility/utility.h"
 
 const double FOCAL_LENGTH = 460.0;
-const int WINDOW_SIZE = 10;
+const int WINDOW_SIZE = 10;  /// 滑窗大小
 const int NUM_OF_CAM = 1;
 const int NUM_OF_F = 1000;
 //#define UNIT_SPHERE_ERROR

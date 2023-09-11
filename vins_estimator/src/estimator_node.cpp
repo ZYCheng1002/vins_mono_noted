@@ -39,8 +39,10 @@ bool init_feature = 0;
 bool init_imu = 1;
 double last_imu_t = 0;
 
+///@brief 状态预测
 void predict(const sensor_msgs::ImuConstPtr& imu_msg) {
   double t = imu_msg->header.stamp.toSec();
+  /// 初始化,首帧只更新时间戳
   if (init_imu) {
     latest_time = t;
     init_imu = 0;
@@ -59,22 +61,23 @@ void predict(const sensor_msgs::ImuConstPtr& imu_msg) {
   double rz = imu_msg->angular_velocity.z;
   Eigen::Vector3d angular_velocity{rx, ry, rz};
 
-  Eigen::Vector3d un_acc_0 = tmp_Q * (acc_0 - tmp_Ba) - estimator.g;
+  Eigen::Vector3d un_acc_0 = tmp_Q * (acc_0 - tmp_Ba) - estimator.g;  /// q * (acc - b_a) - gravy
 
-  Eigen::Vector3d un_gyr = 0.5 * (gyr_0 + angular_velocity) - tmp_Bg;
-  tmp_Q = tmp_Q * Utility::deltaQ(un_gyr * dt);
+  Eigen::Vector3d un_gyr = 0.5 * (gyr_0 + angular_velocity) - tmp_Bg;  /// 中值平滑 gyr - b_g
+  tmp_Q = tmp_Q * Utility::deltaQ(un_gyr * dt);  /// q * 0.5 * w * δt
 
   Eigen::Vector3d un_acc_1 = tmp_Q * (linear_acceleration - tmp_Ba) - estimator.g;
 
   Eigen::Vector3d un_acc = 0.5 * (un_acc_0 + un_acc_1);
 
-  tmp_P = tmp_P + dt * tmp_V + 0.5 * dt * dt * un_acc;
-  tmp_V = tmp_V + dt * un_acc;
+  tmp_P = tmp_P + dt * tmp_V + 0.5 * dt * dt * un_acc;  /// 通过加速度计计算位置
+  tmp_V = tmp_V + dt * un_acc;  /// 通过加速度计计算速度
 
   acc_0 = linear_acceleration;
   gyr_0 = angular_velocity;
 }
 
+///@brief 更新pose graph出来的位姿
 void update() {
   TicToc t_predict;
   latest_time = current_time;
@@ -90,18 +93,26 @@ void update() {
   for (sensor_msgs::ImuConstPtr tmp_imu_msg; !tmp_imu_buf.empty(); tmp_imu_buf.pop()) predict(tmp_imu_buf.front());
 }
 
+///@brief 返回IMU和特征点的观测数据
 std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> getMeasurements() {
   std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
-
+  /// 一次性可能有多帧观测满足条件,所以while(true)
   while (true) {
+    /// 两者存在任意无数据返回空观测
     if (imu_buf.empty() || feature_buf.empty()) return measurements;
-
+    /* 此种情况返回空观测,继续等下时刻
+     * imu:|||||||||
+     * fea:           |   |   |
+     */
     if (!(imu_buf.back()->header.stamp.toSec() > feature_buf.front()->header.stamp.toSec() + estimator.td)) {
       // ROS_WARN("wait for imu, only should happen at the beginning");
       sum_of_wait++;
       return measurements;
     }
-
+    /* 此种情况去除首帧特征
+     * imu:       |||||||||
+     * fea:   |   |   |
+     */
     if (!(imu_buf.front()->header.stamp.toSec() < feature_buf.front()->header.stamp.toSec() + estimator.td)) {
       ROS_WARN("throw img, only should happen at the beginning");
       feature_buf.pop();
@@ -111,6 +122,12 @@ std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointC
     feature_buf.pop();
 
     std::vector<sensor_msgs::ImuConstPtr> IMUs;
+    /* 理想观测数据:最终的measurement包含多帧imu和一帧feature,imu除了最后一帧其余时间戳小于feature
+     * imu:|||||||||||||||
+     * fea:   |   |   |
+     * m_i:|||||
+     * m_f:   |
+     */
     while (imu_buf.front()->header.stamp.toSec() < img_msg->header.stamp.toSec() + estimator.td) {
       IMUs.emplace_back(imu_buf.front());
       imu_buf.pop();
@@ -138,7 +155,7 @@ void imu_callback(const sensor_msgs::ImuConstPtr& imu_msg) {
 
   {
     std::lock_guard<std::mutex> lg(m_state);
-    predict(imu_msg);
+    predict(imu_msg);  /// imu预测位姿
     std_msgs::Header header = imu_msg->header;
     header.frame_id = "world";
     if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR) pubLatestOdometry(tmp_P, tmp_Q, tmp_V, header);
@@ -147,7 +164,7 @@ void imu_callback(const sensor_msgs::ImuConstPtr& imu_msg) {
 
 void feature_callback(const sensor_msgs::PointCloudConstPtr& feature_msg) {
   if (!init_feature) {
-    // skip the first detected feature, which doesn't contain optical flow speed
+    /// 首帧初始化,跳过首帧,因为没有光流跟踪的速度量
     init_feature = 1;
     return;
   }
@@ -157,6 +174,7 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr& feature_msg) {
   con.notify_one();
 }
 
+///@brief 重置
 void restart_callback(const std_msgs::BoolConstPtr& restart_msg) {
   if (restart_msg->data == true) {
     ROS_WARN("restart the estimator!");
@@ -181,7 +199,7 @@ void relocalization_callback(const sensor_msgs::PointCloudConstPtr& points_msg) 
   m_buf.unlock();
 }
 
-// thread: visual-inertial odometry
+///@brief 视觉里程计线程
 void process() {
   while (true) {
     std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;

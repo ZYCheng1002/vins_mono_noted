@@ -69,6 +69,7 @@ void Estimator::clearState() {
 }
 
 void Estimator::processIMU(double dt, const Vector3d& linear_acceleration, const Vector3d& angular_velocity) {
+  /// 首帧初始化
   if (!first_imu) {
     first_imu = true;
     acc_0 = linear_acceleration;
@@ -76,6 +77,7 @@ void Estimator::processIMU(double dt, const Vector3d& linear_acceleration, const
   }
 
   if (!pre_integrations[frame_count]) {
+    /// 如果这个关键点帧没有预积分,则新建
     pre_integrations[frame_count] = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
   }
   if (frame_count != 0) {

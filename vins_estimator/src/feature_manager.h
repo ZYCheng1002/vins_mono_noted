@@ -17,6 +17,7 @@ using namespace Eigen;
 
 #include "parameters.h"
 
+///@brief 记录特征值数据(坐标,速度等)
 class FeaturePerFrame {
  public:
   FeaturePerFrame(const Eigen::Matrix<double, 7, 1>& _point, double td) {
@@ -42,6 +43,7 @@ class FeaturePerFrame {
   double dep_gradient;
 };
 
+///@brief 带有id的特征值(记录同一id的特征值,为了构建优化问题)
 class FeaturePerId {
  public:
   const int feature_id;

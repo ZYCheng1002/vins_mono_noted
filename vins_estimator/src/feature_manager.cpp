@@ -26,6 +26,7 @@ int FeatureManager::getFeatureCount() {
   return cnt;
 }
 
+///@brief
 bool FeatureManager::addFeatureCheckParallax(int frame_count,
                                              const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& image,
                                              double td) {
@@ -42,8 +43,8 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count,
         feature.begin(), feature.end(), [feature_id](const FeaturePerId& it) { return it.feature_id == feature_id; });
 
     if (it == feature.end()) {
-      feature.push_back(FeaturePerId(feature_id, frame_count));
-      feature.back().feature_per_frame.push_back(f_per_fra);
+      feature.push_back(FeaturePerId(feature_id, frame_count));  /// 新的特征值进行添加
+      feature.back().feature_per_frame.push_back(f_per_fra);     /// 添加特征点
     } else if (it->feature_id == feature_id) {
       it->feature_per_frame.push_back(f_per_fra);
       last_track_num++;
