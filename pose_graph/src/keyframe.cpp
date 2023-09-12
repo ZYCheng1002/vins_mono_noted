@@ -1,3 +1,4 @@
+#include <opencv2/imgproc/imgproc_c.h>
 #include "keyframe.h"
 
 template <typename Derived>

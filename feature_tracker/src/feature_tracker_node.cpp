@@ -6,6 +6,7 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/image_encodings.h>
 #include <std_msgs/Bool.h>
+#include <opencv2/core/types_c.h>
 
 #include "feature_tracker.h"
 

@@ -264,7 +264,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index) {
     putText(compressed_image,
             "feature_num:" + to_string(feature_num),
             cv::Point2f(10, 10),
-            CV_FONT_HERSHEY_SIMPLEX,
+            cv::FONT_HERSHEY_SIMPLEX,
             0.4,
             cv::Scalar(255));
     image_pool[frame_index] = compressed_image;
@@ -289,7 +289,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index) {
       putText(loop_result,
               "neighbour score:" + to_string(ret[0].Score),
               cv::Point2f(10, 50),
-              CV_FONT_HERSHEY_SIMPLEX,
+              cv::FONT_HERSHEY_SIMPLEX,
               0.5,
               cv::Scalar(255));
   }
@@ -302,7 +302,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index) {
       putText(tmp_image,
               "index:  " + to_string(tmp_index) + "loop score:" + to_string(ret[i].Score),
               cv::Point2f(10, 50),
-              CV_FONT_HERSHEY_SIMPLEX,
+              cv::FONT_HERSHEY_SIMPLEX,
               0.5,
               cv::Scalar(255));
       cv::hconcat(loop_result, tmp_image, loop_result);
@@ -321,7 +321,7 @@ int PoseGraph::detectLoop(KeyFrame* keyframe, int frame_index) {
           putText(tmp_image,
                   "loop score:" + to_string(ret[i].Score),
                   cv::Point2f(10, 50),
-                  CV_FONT_HERSHEY_SIMPLEX,
+                  cv::FONT_HERSHEY_SIMPLEX,
                   0.4,
                   cv::Scalar(255));
           cv::hconcat(loop_result, tmp_image, loop_result);
@@ -354,7 +354,7 @@ void PoseGraph::addKeyFrameIntoVoc(KeyFrame* keyframe) {
     putText(compressed_image,
             "feature_num:" + to_string(feature_num),
             cv::Point2f(10, 10),
-            CV_FONT_HERSHEY_SIMPLEX,
+            cv::FONT_HERSHEY_SIMPLEX,
             0.4,
             cv::Scalar(255));
     image_pool[keyframe->index] = compressed_image;

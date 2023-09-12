@@ -12,6 +12,7 @@
 #include <eigen3/Eigen/Dense>
 #include <mutex>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/types_c.h>
 #include <queue>
 #include <string>
 #include <thread>
