@@ -6,6 +6,7 @@
 #include <ceres/ceres.h>
 using namespace Eigen;
 
+///@class 预积分模块
 class IntegrationBase
 {
   public:
@@ -35,6 +36,7 @@ class IntegrationBase
         propagate(dt, acc, gyr);
     }
 
+    ///@brief 根据更新后的bias重新计算预积分
     void repropagate(const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg)
     {
         sum_dt = 0.0;

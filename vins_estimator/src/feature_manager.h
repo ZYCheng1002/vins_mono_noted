@@ -108,6 +108,7 @@ class FeatureManager {
   int last_track_num;
 
  private:
+  ///@brief 计算视差
   double compensatedParallax2(const FeaturePerId& it_per_id, int frame_count);
 
   const Matrix3d* Rs;

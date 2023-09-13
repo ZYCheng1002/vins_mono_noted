@@ -20,8 +20,8 @@ extern double INIT_DEPTH;
 extern double MIN_PARALLAX;
 extern int ESTIMATE_EXTRINSIC;
 
-extern double ACC_N, ACC_W;
-extern double GYR_N, GYR_W;
+extern double ACC_N, ACC_W;  /// 加速度计噪声标准差,零偏倒数的标准差
+extern double GYR_N, GYR_W;  /// 陀螺仪噪声标准差,零偏倒数的标准差
 
 extern std::vector<Eigen::Matrix3d> RIC;
 extern std::vector<Eigen::Vector3d> TIC;

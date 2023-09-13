@@ -26,7 +26,8 @@ int FeatureManager::getFeatureCount() {
   return cnt;
 }
 
-///@brief
+///@brief 计算视差
+///@param image [feature id [camera id [xyz_ux_velocity]]], vector因为camera数目的影响,即一个特征(feature id)被多个相机观测
 bool FeatureManager::addFeatureCheckParallax(int frame_count,
                                              const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& image,
                                              double td) {
@@ -35,10 +36,12 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count,
   double parallax_sum = 0;
   int parallax_num = 0;
   last_track_num = 0;
+  /// image为每一帧的特征总数
   for (auto& id_pts : image) {
-    FeaturePerFrame f_per_fra(id_pts.second[0].second, td);
+    FeaturePerFrame f_per_fra(id_pts.second[0].second, td);  /// 一个特征的主相机观测
 
     int feature_id = id_pts.first;
+    /// 通过feature id查找feature中保存的特征
     auto it = find_if(
         feature.begin(), feature.end(), [feature_id](const FeaturePerId& it) { return it.feature_id == feature_id; });
 
@@ -53,6 +56,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count,
 
   if (frame_count < 2 || last_track_num < 20) return true;
 
+  /// 计算每个特征的视差
   for (auto& it_per_id : feature) {
     if (it_per_id.start_frame <= frame_count - 2 &&
         it_per_id.start_frame + int(it_per_id.feature_per_frame.size()) - 1 >= frame_count - 1) {

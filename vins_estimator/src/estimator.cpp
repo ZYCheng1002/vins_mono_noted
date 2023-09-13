@@ -5,6 +5,7 @@ Estimator::Estimator() : f_manager{Rs} {
   clearState();
 }
 
+///@brief 视觉测量残差的协方差矩阵
 void Estimator::setParameter() {
   for (int i = 0; i < NUM_OF_CAM; i++) {
     tic[i] = TIC[i];
@@ -81,7 +82,7 @@ void Estimator::processIMU(double dt, const Vector3d& linear_acceleration, const
     pre_integrations[frame_count] = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
   }
   if (frame_count != 0) {
-    pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity);
+    pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity);  /// 向预积分内部添加数据
     // if(solver_flag != NON_LINEAR)
     tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity);
 

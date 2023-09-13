@@ -200,7 +200,7 @@ void relocalization_callback(const sensor_msgs::PointCloudConstPtr& points_msg) 
 }
 
 ///@brief 视觉里程计线程
-void process() {
+[[noreturn]] void process() {
   while (true) {
     std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
     std::unique_lock<std::mutex> lk(m_buf);
